@@ -3,58 +3,56 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
+	"strings"
 )
 
-func (cfg *ApiConfig) HandlerValidater(w http.ResponseWriter, r *http.Request) {
-	type chirp struct {
-		Body string `json:"body"`
-	}
+type chirp struct {
+	Body string `json:"body"`
+}
 
+func (cfg *ApiConfig) HandlerValidater(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
+
 	c := chirp{}
+
 	err := decoder.Decode(&c)
 	if err != nil {
-		log.Printf("Error decoding chirp: %s", err)
-		w.WriteHeader(500)
-		return
+		respondWithError(w, 400, fmt.Sprintf("Error decoding chirp: %s", err))
 	}
 
 	if len(c.Body) <= 140 {
-		type validResponse struct {
-			Valid bool `json:"valid"`
+		type cleanedChirp struct {
+			CleanedBody string `json:"cleaned_body"`
 		}
 
-		respBody := validResponse{
-			Valid: true,
+		respBody := cleanedChirp{
+			CleanedBody: profanityFilter(c),
 		}
 
-		data, err := json.Marshal(respBody)
-		if err != nil {
-			fmt.Printf("failed to validate: %v\n", err)
-		}
-
-		w.WriteHeader(200)
-		w.Write(data)
+		respondWithJSON(w, 200, respBody)
 	} else {
-		type errorResponse struct {
-			Error string `json:"error"`
-		}
-
-		respBody := errorResponse{
-			Error: "Chirp is too long",
-		}
-
-		data, err := json.Marshal(respBody)
-		if err != nil {
-			fmt.Printf("failed to validate: %v\n", err)
-		}
-
-		w.WriteHeader(400)
-		w.Write(data)
+		respondWithError(w, 400, "Chirp is too long")
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+}
 
+func profanityFilter(c chirp) string {
+
+	words := strings.Split(c.Body, " ")
+	for i, w := range words {
+		switch strings.ToLower(w) {
+		case "kerfuffle":
+			words[i] = "****"
+		case "sharbert":
+			words[i] = "****"
+		case "fornax":
+			words[i] = "****"
+		default:
+			continue
+		}
+
+	}
+	cleaned := strings.Join(words, " ")
+	return cleaned
 }
