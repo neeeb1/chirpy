@@ -10,7 +10,8 @@ func (cfg *ApiConfig) HandlerMetrics(w http.ResponseWriter, req *http.Request) {
 	w.Header().Add("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 
-	body := fmt.Sprintf(`<html>
+	body := fmt.Sprintf(`
+<html>
   <body>
     <h1>Welcome, Chirpy Admin</h1>
     <p>Chirpy has been visited %d times!</p>

@@ -13,6 +13,7 @@ func main() {
 	mux.HandleFunc("GET /api/healthz", api.HandlerHealth)
 	mux.HandleFunc("GET /admin/metrics", apiCfg.HandlerMetrics)
 	mux.HandleFunc("POST /admin/reset", apiCfg.HandlerResetMetrics)
+	mux.HandleFunc("POST /api/validate_chirp", apiCfg.HandlerValidater)
 	mux.Handle("/app/", apiCfg.MiddlewareMetricsIncr(http.StripPrefix("/app/", http.FileServer(http.Dir(".")))))
 
 	server := http.Server{}
