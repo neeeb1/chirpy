@@ -8,7 +8,8 @@ import (
 )
 
 type chirp struct {
-	Body string `json:"body"`
+	Body   string `json:"body"`
+	UserID string `json:"user_id"`
 }
 
 func (cfg *ApiConfig) HandlerValidater(w http.ResponseWriter, r *http.Request) {

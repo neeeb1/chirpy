@@ -12,6 +12,7 @@ import (
 type ApiConfig struct {
 	serverHits atomic.Int32
 	DbQuereies *database.Queries
+	Platform   string
 }
 
 func respondWithJSON(w http.ResponseWriter, code int, payload any) {

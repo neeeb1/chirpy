@@ -17,6 +17,8 @@ func main() {
 
 	var apiCfg api.ApiConfig
 
+	apiCfg.Platform = os.Getenv("PLATFORM")
+
 	dbURL := os.Getenv("DB_URL")
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
@@ -29,8 +31,9 @@ func main() {
 
 	mux.HandleFunc("GET /api/healthz", api.HandlerHealth)
 	mux.HandleFunc("GET /admin/metrics", apiCfg.HandlerMetrics)
-	mux.HandleFunc("POST /admin/reset", apiCfg.HandlerResetMetrics)
+	mux.HandleFunc("POST /admin/reset", apiCfg.HandlerReset)
 	mux.HandleFunc("POST /api/validate_chirp", apiCfg.HandlerValidater)
+	mux.HandleFunc("POST /api/users", apiCfg.HandlerNewUser)
 	mux.Handle("/app/", apiCfg.MiddlewareMetricsIncr(http.StripPrefix("/app/", http.FileServer(http.Dir(".")))))
 
 	server := http.Server{}
