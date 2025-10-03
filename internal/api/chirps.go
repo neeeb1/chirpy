@@ -141,23 +141,22 @@ func validateChirp(c chirp) (chirp, error) {
 
 func profanityFilter(c chirp) chirp {
 	words := strings.Split(c.Body, " ")
-	for i, w := range words {
+	var cleanBody []string
+	for _, w := range words {
 		switch strings.ToLower(w) {
 		case "kerfuffle":
-			words[i] = "****"
+			cleanBody = append(cleanBody, "****")
 		case "sharbert":
-			words[i] = "****"
+			cleanBody = append(cleanBody, "****")
 		case "fornax":
-			words[i] = "****"
+			cleanBody = append(cleanBody, "****")
 		default:
-			continue
+			cleanBody = append(cleanBody, w)
 		}
 	}
 
-	cleanBody := strings.Join(words, " ")
-
 	cleanChrip := chirp{
-		Body:   cleanBody,
+		Body:   strings.Join(cleanBody, " "),
 		UserID: c.UserID,
 	}
 
