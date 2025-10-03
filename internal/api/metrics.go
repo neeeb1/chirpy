@@ -28,7 +28,7 @@ func (cfg *ApiConfig) HandlerReset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cfg.serverHits.Swap(0)
-	cfg.DbQuereies.DeleteAllUsers(r.Context())
+	cfg.DbQueries.DeleteAllUsers(r.Context())
 
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)

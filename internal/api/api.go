@@ -6,13 +6,28 @@ import (
 	"net/http"
 	"sync/atomic"
 
+	//"github.com/neeeb1/chirpy/internal/api"
 	"github.com/neeeb1/chirpy/internal/database"
 )
 
 type ApiConfig struct {
 	serverHits atomic.Int32
-	DbQuereies *database.Queries
+	DbQueries  *database.Queries
 	Platform   string
+}
+
+func RegisterEndpoints(mux *http.ServeMux, apiCfg *ApiConfig) {
+	mux.HandleFunc("GET /api/healthz", HandlerHealth)
+
+	mux.HandleFunc("GET /admin/metrics", apiCfg.HandlerMetrics)
+	mux.HandleFunc("POST /admin/reset", apiCfg.HandlerReset)
+
+	mux.HandleFunc("POST /api/chirps", apiCfg.HandlerPostChirp)
+	mux.HandleFunc("GET /api/chirps", apiCfg.HandlerGetChirps)
+	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.HandlerGetChirpByID)
+
+	mux.HandleFunc("POST /api/users", apiCfg.HandlerNewUser)
+	mux.Handle("/app/", apiCfg.MiddlewareMetricsIncr(http.StripPrefix("/app/", http.FileServer(http.Dir(".")))))
 }
 
 func respondWithJSON(w http.ResponseWriter, code int, payload any) {

@@ -30,7 +30,7 @@ func (cfg *ApiConfig) HandlerNewUser(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, 400, fmt.Sprintf("failed to decode request: %s", err))
 	}
 
-	dbUser, err := cfg.DbQuereies.CreateUser(r.Context(), e.Email)
+	dbUser, err := cfg.DbQueries.CreateUser(r.Context(), e.Email)
 	if err != nil {
 		respondWithError(w, 400, fmt.Sprintf("failed to create user: %s", err))
 	}
