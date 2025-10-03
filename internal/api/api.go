@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"sync/atomic"
 
-	//"github.com/neeeb1/chirpy/internal/api"
 	"github.com/neeeb1/chirpy/internal/database"
 )
 
@@ -27,6 +26,7 @@ func RegisterEndpoints(mux *http.ServeMux, apiCfg *ApiConfig) {
 	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.HandlerGetChirpByID)
 
 	mux.HandleFunc("POST /api/users", apiCfg.HandlerNewUser)
+	mux.HandleFunc("POST /api/login", apiCfg.HandlerLogin)
 	mux.Handle("/app/", apiCfg.MiddlewareMetricsIncr(http.StripPrefix("/app/", http.FileServer(http.Dir(".")))))
 }
 
