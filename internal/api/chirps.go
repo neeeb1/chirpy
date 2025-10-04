@@ -22,19 +22,20 @@ func (cfg *ApiConfig) HandlerPostChirp(w http.ResponseWriter, r *http.Request) {
 
 	err := decoder.Decode(&c)
 	if err != nil {
-		respondWithError(w, 400, err.Error())
+		respondWithError(w, 401, err.Error())
 		return
 	}
 
 	token, err := auth.GetBearerToken(r.Header)
+	fmt.Println(token)
 	if err != nil {
-		respondWithError(w, 400, err.Error())
+		respondWithError(w, 401, err.Error())
 		return
 	}
 
 	userID, err := auth.ValidateJWT(token, cfg.Secret)
 	if err != nil {
-		respondWithError(w, 400, err.Error())
+		respondWithError(w, 401, err.Error())
 		return
 	}
 
@@ -42,13 +43,13 @@ func (cfg *ApiConfig) HandlerPostChirp(w http.ResponseWriter, r *http.Request) {
 
 	validChirp, err := validateChirp(c)
 	if err != nil {
-		respondWithError(w, 400, err.Error())
+		respondWithError(w, 401, err.Error())
 		return
 	}
 
 	userId, err := uuid.Parse(validChirp.UserID)
 	if err != nil {
-		respondWithError(w, 400, "failed to parse uuid")
+		respondWithError(w, 401, "failed to parse uuid")
 		return
 	}
 	params := database.CreateChirpParams{
@@ -58,7 +59,7 @@ func (cfg *ApiConfig) HandlerPostChirp(w http.ResponseWriter, r *http.Request) {
 
 	newChirp, err := cfg.DbQueries.CreateChirp(r.Context(), params)
 	if err != nil {
-		respondWithError(w, 400, "failed to create chirp")
+		respondWithError(w, 401, "failed to create chirp")
 		return
 	}
 

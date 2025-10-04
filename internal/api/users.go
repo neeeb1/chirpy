@@ -12,11 +12,12 @@ import (
 )
 
 type User struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Email     string    `json:"email"`
-	Token     string    `json:"token"`
+	ID           uuid.UUID `json:"id"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	Email        string    `json:"email"`
+	Token        string    `json:"token"`
+	RefreshToken string    `json:"refresh_token"`
 }
 
 func (cfg *ApiConfig) HandlerNewUser(w http.ResponseWriter, r *http.Request) {
@@ -64,48 +65,62 @@ func (cfg *ApiConfig) HandlerNewUser(w http.ResponseWriter, r *http.Request) {
 func (cfg *ApiConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
-	type user struct {
-		Password         string `json:"password"`
-		Email            string `json:"email"`
-		ExpiresInSeconds int    `json:"expires_in_seconds"`
+	type body struct {
+		Password string `json:"password"`
+		Email    string `json:"email"`
 	}
-	u := user{}
+	b := body{}
 
-	err := decoder.Decode(&u)
+	err := decoder.Decode(&b)
 	if err != nil {
 		respondWithError(w, 400, fmt.Sprintf("failed to decode request: %s", err))
 		return
 	}
 
-	result, err := cfg.DbQueries.GetUserByEmail(r.Context(), u.Email)
+	user, err := cfg.DbQueries.GetUserByEmail(r.Context(), b.Email)
 	if err != nil {
 		respondWithError(w, 401, "Incorrect email or password")
 		return
 	}
 
-	match, err := auth.CheckPasswordHash(u.Password, result.HashedPassword)
+	match, err := auth.CheckPasswordHash(b.Password, user.HashedPassword)
 	if err != nil {
 		respondWithError(w, 401, "Incorrect email or password")
 		return
-	}
-
-	if u.ExpiresInSeconds > 3600.0 || u.ExpiresInSeconds == 0.0 {
-		u.ExpiresInSeconds = 3600.0
 	}
 
 	if match {
-		token, err := auth.MakeJWT(result.ID, cfg.Secret, (time.Duration(u.ExpiresInSeconds) * time.Second))
+		token, err := auth.MakeJWT(user.ID, cfg.Secret, (time.Hour))
 		if err != nil {
-			respondWithError(w, 400, "Failed to generate user token")
+			respondWithError(w, 401, "Failed to generate user token")
+			return
+		}
+
+		refreshToken, err := auth.MakeRefreshToken()
+		if err != nil {
+			respondWithError(w, 401, "Failed to generate refresh token")
+			return
+		}
+
+		refreshTokenParams := database.CreateRefreshTokenParams{
+			Token:     refreshToken,
+			UserID:    uuid.NullUUID{UUID: user.ID, Valid: true},
+			ExpiresAt: time.Now().Add(time.Hour * 24 * 60),
+		}
+
+		_, err = cfg.DbQueries.CreateRefreshToken(r.Context(), refreshTokenParams)
+		if err != nil {
+			respondWithError(w, 401, "Failed to create refresh token")
 			return
 		}
 
 		resp := User{
-			ID:        result.ID,
-			CreatedAt: result.CreatedAt,
-			UpdatedAt: result.UpdatedAt,
-			Email:     result.Email,
-			Token:     token,
+			ID:           user.ID,
+			CreatedAt:    user.CreatedAt,
+			UpdatedAt:    user.UpdatedAt,
+			Email:        user.Email,
+			Token:        token,
+			RefreshToken: refreshToken,
 		}
 		respondWithJSON(w, 200, resp)
 		return

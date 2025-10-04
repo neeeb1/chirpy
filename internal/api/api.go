@@ -28,6 +28,9 @@ func RegisterEndpoints(mux *http.ServeMux, apiCfg *ApiConfig) {
 
 	mux.HandleFunc("POST /api/users", apiCfg.HandlerNewUser)
 	mux.HandleFunc("POST /api/login", apiCfg.HandlerLogin)
+	mux.HandleFunc("POST /api/refresh", apiCfg.HandlerRefresh)
+	mux.HandleFunc("POST /api/revoke", apiCfg.HandlerRevoke)
+
 	mux.Handle("/app/", apiCfg.MiddlewareMetricsIncr(http.StripPrefix("/app/", http.FileServer(http.Dir(".")))))
 }
 
