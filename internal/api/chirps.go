@@ -119,7 +119,6 @@ func (cfg *ApiConfig) HandlerGetChirpByID(w http.ResponseWriter, r *http.Request
 		respondWithError(w, 400, "failed to parse chirp id")
 		return
 	}
-	fmt.Printf("chirpId: %s\n", chirpID)
 
 	chirp, err := cfg.DbQueries.GetChirpByID(r.Context(), chirpID)
 	if err != nil {
@@ -143,6 +142,39 @@ func (cfg *ApiConfig) HandlerGetChirpByID(w http.ResponseWriter, r *http.Request
 		UserID:    chirp.UserID.UUID.String(),
 	}
 	respondWithJSON(w, 200, res)
+}
+
+func (cfg *ApiConfig) HandlerDeleteChirp(w http.ResponseWriter, r *http.Request) {
+	chirpID, err := uuid.Parse(r.PathValue("chirpID"))
+	if err != nil {
+		respondWithError(w, 401, "failed to parse chirp id")
+		return
+	}
+
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, 401, err.Error())
+		return
+	}
+
+	userID, err := auth.ValidateJWT(token, cfg.Secret)
+	if err != nil {
+		respondWithError(w, 401, err.Error())
+		return
+	}
+
+	chirp, err := cfg.DbQueries.GetChirpByID(r.Context(), chirpID)
+	if err != nil {
+		respondWithError(w, 404, "chirp not found")
+		return
+	}
+
+	if chirp.UserID.UUID == userID {
+		cfg.DbQueries.DeleteChripByID(r.Context(), chirpID)
+		respondWithJSON(w, 204, "")
+	} else {
+		respondWithJSON(w, 403, "Unauthorized")
+	}
 }
 
 func validateChirp(c chirp) (chirp, error) {

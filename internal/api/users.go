@@ -23,19 +23,19 @@ type User struct {
 func (cfg *ApiConfig) HandlerNewUser(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
-	type user struct {
+	type body struct {
 		Password string `json:"password"`
 		Email    string `json:"email"`
 	}
-	u := user{}
+	b := body{}
 
-	err := decoder.Decode(&u)
+	err := decoder.Decode(&b)
 	if err != nil {
 		respondWithError(w, 400, fmt.Sprintf("failed to decode request: %s", err))
 		return
 	}
 
-	hash, err := auth.HashPassword(u.Password)
+	hash, err := auth.HashPassword(b.Password)
 	if err != nil {
 		respondWithError(w, 400, fmt.Sprintf("failed to hash password: %s", err))
 		return
@@ -43,7 +43,7 @@ func (cfg *ApiConfig) HandlerNewUser(w http.ResponseWriter, r *http.Request) {
 
 	params := database.CreateUserParams{
 		HashedPassword: hash,
-		Email:          u.Email,
+		Email:          b.Email,
 	}
 
 	dbUser, err := cfg.DbQueries.CreateUser(r.Context(), params)
@@ -128,5 +128,61 @@ func (cfg *ApiConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, 401, "Incorrect email or password")
 		return
 	}
+
+}
+
+func (cfg *ApiConfig) HandlerUpdateUser(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+
+	type body struct {
+		Password string `json:"password"`
+		Email    string `json:"email"`
+	}
+	b := body{}
+
+	err := decoder.Decode(&b)
+	if err != nil {
+		respondWithError(w, 401, fmt.Sprintf("failed to decode request: %s", err))
+		return
+	}
+
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, 401, err.Error())
+		return
+	}
+
+	userID, err := auth.ValidateJWT(token, cfg.Secret)
+	if err != nil {
+		respondWithError(w, 401, err.Error())
+		return
+	}
+
+	hash, err := auth.HashPassword(b.Password)
+	if err != nil {
+		respondWithError(w, 401, fmt.Sprintf("failed to hash password: %s", err))
+		return
+	}
+
+	params := database.UpdateUserEmailAndPasswordParams{
+		Email:          b.Email,
+		HashedPassword: hash,
+		ID:             userID,
+	}
+
+	updatedUser, err := cfg.DbQueries.UpdateUserEmailAndPassword(r.Context(), params)
+	if err != nil {
+		respondWithError(w, 401, err.Error())
+		return
+	}
+
+	u := User{
+		ID:        updatedUser.ID,
+		CreatedAt: updatedUser.CreatedAt,
+		UpdatedAt: updatedUser.UpdatedAt,
+		Email:     updatedUser.Email,
+	}
+
+	respondWithJSON(w, 200, u)
 
 }

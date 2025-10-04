@@ -25,8 +25,11 @@ func RegisterEndpoints(mux *http.ServeMux, apiCfg *ApiConfig) {
 	mux.HandleFunc("POST /api/chirps", apiCfg.HandlerPostChirp)
 	mux.HandleFunc("GET /api/chirps", apiCfg.HandlerGetChirps)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.HandlerGetChirpByID)
+	mux.HandleFunc("DELETE /api/chirps/{chirpID}", apiCfg.HandlerDeleteChirp)
 
 	mux.HandleFunc("POST /api/users", apiCfg.HandlerNewUser)
+	mux.HandleFunc("PUT /api/users", apiCfg.HandlerUpdateUser)
+
 	mux.HandleFunc("POST /api/login", apiCfg.HandlerLogin)
 	mux.HandleFunc("POST /api/refresh", apiCfg.HandlerRefresh)
 	mux.HandleFunc("POST /api/revoke", apiCfg.HandlerRevoke)
