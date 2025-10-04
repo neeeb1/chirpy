@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/google/uuid"
@@ -83,6 +84,7 @@ func (cfg *ApiConfig) HandlerPostChirp(w http.ResponseWriter, r *http.Request) {
 
 func (cfg *ApiConfig) HandlerGetChirps(w http.ResponseWriter, r *http.Request) {
 	userID := r.URL.Query().Get("author_id")
+	sortDir := r.URL.Query().Get("sort")
 
 	var dbChirps []database.Chirp
 	var err error
@@ -99,6 +101,11 @@ func (cfg *ApiConfig) HandlerGetChirps(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, 400, "failed to get chirps")
 			return
 		}
+	}
+
+	if sortDir == "desc" {
+		fmt.Println(sortDir)
+		sort.Slice(dbChirps, func(i, j int) bool { return dbChirps[j].CreatedAt.Before(dbChirps[i].CreatedAt) })
 	}
 
 	type Chirps struct {
