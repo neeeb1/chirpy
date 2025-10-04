@@ -73,6 +73,6 @@ func (cfg *ApiConfig) HandlerRevoke(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondWithJSON(w, 204, nil)
+	respondWithJSON(w, 204, "")
 
 }

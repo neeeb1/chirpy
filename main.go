@@ -18,11 +18,11 @@ func main() {
 	var apiCfg api.ApiConfig
 
 	apiCfg.Platform = os.Getenv("PLATFORM")
-
 	apiCfg.Secret = os.Getenv("SECRET")
+	apiCfg.PolkaKey = os.Getenv("POLKA_KEY")
+	apiCfg.DbURL = os.Getenv("DB_URL")
 
-	dbURL := os.Getenv("DB_URL")
-	db, err := sql.Open("postgres", dbURL)
+	db, err := sql.Open("postgres", apiCfg.DbURL)
 	if err != nil {
 		fmt.Printf("error opening database: %v\n", err)
 		return

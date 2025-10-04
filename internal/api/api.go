@@ -14,6 +14,8 @@ type ApiConfig struct {
 	DbQueries  *database.Queries
 	Platform   string
 	Secret     string
+	PolkaKey   string
+	DbURL      string
 }
 
 func RegisterEndpoints(mux *http.ServeMux, apiCfg *ApiConfig) {
@@ -33,6 +35,8 @@ func RegisterEndpoints(mux *http.ServeMux, apiCfg *ApiConfig) {
 	mux.HandleFunc("POST /api/login", apiCfg.HandlerLogin)
 	mux.HandleFunc("POST /api/refresh", apiCfg.HandlerRefresh)
 	mux.HandleFunc("POST /api/revoke", apiCfg.HandlerRevoke)
+
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.HandlerPolkaWebhook)
 
 	mux.Handle("/app/", apiCfg.MiddlewareMetricsIncr(http.StripPrefix("/app/", http.FileServer(http.Dir(".")))))
 }
