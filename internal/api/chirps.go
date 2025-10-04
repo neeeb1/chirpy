@@ -27,7 +27,6 @@ func (cfg *ApiConfig) HandlerPostChirp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token, err := auth.GetBearerToken(r.Header)
-	fmt.Println(token)
 	if err != nil {
 		respondWithError(w, 401, err.Error())
 		return
@@ -83,11 +82,23 @@ func (cfg *ApiConfig) HandlerPostChirp(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *ApiConfig) HandlerGetChirps(w http.ResponseWriter, r *http.Request) {
+	userID := r.URL.Query().Get("author_id")
 
-	dbChirps, err := cfg.DbQueries.GetAllChirps(r.Context())
-	if err != nil || len(dbChirps) == 0 {
-		respondWithError(w, 400, "failed to get chirps")
-		return
+	var dbChirps []database.Chirp
+	var err error
+
+	if userID != "" {
+		dbChirps, err = cfg.DbQueries.GetChirpByUserID(r.Context(), uuid.NullUUID{UUID: uuid.MustParse(userID), Valid: true})
+		if err != nil || len(dbChirps) == 0 {
+			respondWithError(w, 400, "failed to get chirps")
+			return
+		}
+	} else {
+		dbChirps, err = cfg.DbQueries.GetAllChirps(r.Context())
+		if err != nil || len(dbChirps) == 0 {
+			respondWithError(w, 400, "failed to get chirps")
+			return
+		}
 	}
 
 	type Chirps struct {
