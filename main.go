@@ -19,6 +19,8 @@ func main() {
 
 	apiCfg.Platform = os.Getenv("PLATFORM")
 
+	apiCfg.Secret = os.Getenv("SECRET")
+
 	dbURL := os.Getenv("DB_URL")
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {

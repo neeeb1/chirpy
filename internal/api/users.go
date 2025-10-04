@@ -16,6 +16,7 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Email     string    `json:"email"`
+	Token     string    `json:"token"`
 }
 
 func (cfg *ApiConfig) HandlerNewUser(w http.ResponseWriter, r *http.Request) {
@@ -64,8 +65,9 @@ func (cfg *ApiConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	type user struct {
-		Password string `json:"password"`
-		Email    string `json:"email"`
+		Password         string `json:"password"`
+		Email            string `json:"email"`
+		ExpiresInSeconds int    `json:"expires_in_seconds"`
 	}
 	u := user{}
 
@@ -87,12 +89,23 @@ func (cfg *ApiConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if u.ExpiresInSeconds > 3600.0 || u.ExpiresInSeconds == 0.0 {
+		u.ExpiresInSeconds = 3600.0
+	}
+
 	if match {
+		token, err := auth.MakeJWT(result.ID, cfg.Secret, (time.Duration(u.ExpiresInSeconds) * time.Second))
+		if err != nil {
+			respondWithError(w, 400, "Failed to generate user token")
+			return
+		}
+
 		resp := User{
 			ID:        result.ID,
 			CreatedAt: result.CreatedAt,
 			UpdatedAt: result.UpdatedAt,
 			Email:     result.Email,
+			Token:     token,
 		}
 		respondWithJSON(w, 200, resp)
 		return

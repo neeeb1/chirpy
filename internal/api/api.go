@@ -13,6 +13,7 @@ type ApiConfig struct {
 	serverHits atomic.Int32
 	DbQueries  *database.Queries
 	Platform   string
+	Secret     string
 }
 
 func RegisterEndpoints(mux *http.ServeMux, apiCfg *ApiConfig) {

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/neeeb1/chirpy/internal/auth"
 	"github.com/neeeb1/chirpy/internal/database"
 )
 
@@ -24,6 +25,20 @@ func (cfg *ApiConfig) HandlerPostChirp(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, 400, err.Error())
 		return
 	}
+
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, 400, err.Error())
+		return
+	}
+
+	userID, err := auth.ValidateJWT(token, cfg.Secret)
+	if err != nil {
+		respondWithError(w, 400, err.Error())
+		return
+	}
+
+	c.UserID = userID.String()
 
 	validChirp, err := validateChirp(c)
 	if err != nil {
